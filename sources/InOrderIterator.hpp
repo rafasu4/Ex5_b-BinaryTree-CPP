@@ -7,8 +7,9 @@ namespace ariel
     template <typename T>
     class InOrderIterator
     {
-    private:
+        /*The object currently pointing at.*/
         Node<T> *current;
+        /*Hold the nodes of the tree in in-order travel-set.*/
         std::stack<Node<T> *> node_stk;
 
     public:
@@ -34,16 +35,10 @@ namespace ariel
         };
 
         /*Returns the current node value.*/
-        T &operator*() const
-        {
-            return current->value;
-        }
+        T &operator*() const{ return current->value;}
 
         /*Returns the address of the current node.*/
-        T *operator->() const
-        {
-            return &(current->value);
-        }
+        T *operator->() const{ return &(current->value);}
 
         /*Points to the next element in in-order travel-set.*/
         InOrderIterator &operator++()
@@ -54,10 +49,9 @@ namespace ariel
                 Node<T> *temp = node_stk.top();
                 node_stk.pop();
                 //adding the right sub-tree of temp
-                if (temp->right != nullptr)
-                {
+                if (temp->right != nullptr){
                     node_stk.push(temp->right);
-                    temp = temp->right->left;
+                    temp = node_stk.top()->left;
                     //adding the left branch of new temp
                     while (temp != nullptr)
                     {
@@ -70,31 +64,28 @@ namespace ariel
                 {
                     current = nullptr;
                 }
-                else
-                {
+                else{
                     current = node_stk.top();//pointing to the next element in in-order travel-set
-                }
+                    }
             }
             //if the stack is empty - no more elements
-            else
-            {
+            else{
                 current = nullptr;
             }
             return *this;
         }
-
-        InOrderIterator operator++(int)
-        {
-            const InOrderIterator tmp = *this;
+        /*Returns current element before going to the next element.*/
+        InOrderIterator operator++(int){
+            const InOrderIterator temp = *this;
             ++*this;
-            return tmp;
+            return temp;
         }
-
+        /*Equal operator.*/
         bool operator==(const InOrderIterator &other) const
         {
             return other.current == current;
         }
-
+        /*Inequal operator.*/
         bool operator!=(const InOrderIterator &other) const
         {
             return other.current != current;

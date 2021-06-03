@@ -1,4 +1,3 @@
-
 #pragma once
 #include "Node.hpp"
 #include "PreOrederIterator.hpp"
@@ -8,17 +7,21 @@
 
 namespace ariel
 {
+    /*This class represents a binary tree which composed of nodes - where each node holds value and
+    pointers to its two successors - right and left sons.*/
     template <typename T>
     class BinaryTree
     {
+        /*This tree root.*/
         Node<T> *root;
 
     public:
-        /*Constructor.*/
-        BinaryTree() : root(nullptr) {}
 
-        BinaryTree(const BinaryTree &other)
-        {
+    /************************************* C'tors *************************************/
+        /*C'tor..*/
+        BinaryTree() : root(nullptr) {}
+        /*Copy c'tor.*/
+        BinaryTree(const BinaryTree &other){
             //if there is a root to the tree
             if (other.root != nullptr)
             {
@@ -26,33 +29,26 @@ namespace ariel
                 deepCopy(other.root, root);
             }
         }
-
-        ~BinaryTree()
-        {
-            removeAllNodes(root);
+        /*Move constructor.*/
+        BinaryTree(BinaryTree &&other) noexcept: root(move(other.root)){}
+        /*Destructor.*/
+        ~BinaryTree(){
+            removeAllNodes(root);//recursive function which deletes all the nodes in the tree.
         }
-
-           /*Adds a new root to the tree. In case one already exist, replace it.*/
-        BinaryTree &add_root(const T &t)
-        {
+        /*Adds a new root to the tree. In case one already exist, replace it.*/
+        BinaryTree &add_root(const T t){
             //if tree doesn't have root - create new one
-            if (root == nullptr)
-            {
+            if (root == nullptr){
                 root = new Node<T>(t);
             }
-            else
-            {
+            else{
                 root->value = t; //updating value
             }
             return *this;
-        }
-        
-
+            }
         /*Adds left son to the first argument. If one already exist, replaces it.*/
-        BinaryTree &add_left(T father, T leftSon)
-        {
-            if (root == nullptr)
-            {
+        BinaryTree &add_left(T father, const T leftSon){
+            if (root == nullptr){
                 throw invalid_argument("No root in the tree!");
             }
             Node<T> *f = search(root, father);
@@ -66,7 +62,6 @@ namespace ariel
             {
                 Node<T> *left = new Node<T>(leftSon);
                 f->left = left;
-                left->parent = f; //updating new node's father
             }
             else
             {
@@ -74,10 +69,8 @@ namespace ariel
             }
             return *this;
         }
-
         /*Adds right son to the first argument. If one already exist, replaces it.*/
-        BinaryTree &add_right(T father, T rightSon)
-        {
+        BinaryTree &add_right(T father, T rightSon){
             if (root == nullptr)
             {
                 throw invalid_argument("No root in the tree!");
@@ -88,12 +81,11 @@ namespace ariel
             {
                 throw invalid_argument("No such node in the tree!");
             }
-            //if father node doesn't have a left son - create new one
+            //if father node doesn't have a right son - create new one
             if (f->right == nullptr)
             {
                 Node<T> *right = new Node<T>(rightSon);
                 f->right = right;
-                right->parent = f; //updating new node's father
             }
             else
             {
@@ -102,38 +94,54 @@ namespace ariel
             return *this;
         }
 
-       
+        const Node<T>* getRoot() const{return root;}
 
-        /************************************* Operator Functions *************************************/
-        friend ostream &operator<<(ostream &os, const BinaryTree &tree) { return os; }
+        /************************************* Operators Functions *************************************/
+        friend ostream &operator<<(ostream &os, const BinaryTree &tree) {
+            BinaryTree::printBT(os, "", tree.getRoot() , false);
+             return os; }
         
-        BinaryTree &operator=(const BinaryTree<T> &other)
-        {
+        BinaryTree &operator=(const BinaryTree<T> other){
             //if it's not the same object
             if(this != &other){
+                removeAllNodes(root);//releasing all previouse nodes in the tree
                 //if there is a root to deep copy
                 if(other.root != nullptr){
-                    root->value = other.root->value;
+                    root = new Node<T>(other.root->value);
                     deepCopy(other.root, root);//copying the rest of the tree
                 }
             }
             return *this;
         }
-
+        /*Move assignment operator.*/
+        BinaryTree &operator=(BinaryTree<T> &&other) noexcept{
+            //if it's not the same object
+            if(this != &other){
+                removeAllNodes(root);//releasing all previouse nodes in the tree
+                //if there is a root to deep copy
+                if(other.root != nullptr){
+                    root = new Node<T>(other.root->value);
+                    moveCopy(other.root, root);//copying the rest of the tree
+                }
+            }
+            return *this;
+        }
+        /************************************* APIs *************************************/
+        /*Returns a pointer to the start of the tree in in-order travel-set.*/
         auto begin() { return begin_inorder(); }
-
+        /*Returns a pointer to the end of the tree in in-order travel-set.*/
         auto end() { return end_inorder(); }
-
+        /*Returns a pointer to the start of the tree in pre-order travel-set.*/
         auto begin_preorder(){return PreOrderIterator<T>(root);}
-
+        /*Returns a pointer to the end of the tree in pre-order travel-set.*/
         auto end_preorder(){return PreOrderIterator<T>(nullptr);}
-
+        /*Returns a pointer to the start of the tree in in-order travel-set.*/
         auto begin_inorder(){return InOrderIterator<T>(root);}
-
+        /*Returns a pointer to the end of the tree in in-order travel-set.*/
         auto end_inorder(){return InOrderIterator<T>(nullptr);}
-
+        /*Returns a pointer to the start of the tree in post-order travel-set.*/
         auto begin_postorder(){return PostOrderIterator<T>(root);}
-
+        /*Returns a pointer to the end of the tree in post-order travel-set.*/
         auto end_postorder(){return PostOrderIterator<T>();}
         
         private:
@@ -148,20 +156,29 @@ namespace ariel
                 deepCopy(other->right, current->right);
             }
         }
+        /*Move copy.*/
+        void moveCopy(Node<T> *other, Node<T> *current){
+            if(other->left != nullptr){
+                current->left = other->left;
+                moveCopy(current->left, other->left);
+            }
+             if(other->right != nullptr){
+                current->right = other->right;
+                moveCopy(current->right, other->right);
+            }
+            delete other;
+        }
         /*Deletes all nodes from the tree.*/
-        void removeAllNodes(Node<T> *node)
-        {
+        void removeAllNodes(Node<T> *node){
             if (node != nullptr)
             {
                 removeAllNodes(node->right);
                 removeAllNodes(node->left);
-                delete node;
             }
+            delete node;
         }
-
         /*Returns In-Order Iterator to the given value in the tree. Returns null pointer if one doesn't exist. */
-        Node<T> *search(Node<T> *node, T value)
-        {
+        Node<T> *search(Node<T> *node, T value){
             if (node->value == value)
             {
                 return node;
@@ -185,6 +202,22 @@ namespace ariel
             }
             return ans;
         }
+        /*Taken from GeeksForGeeks.*/
+        static void printBT(ostream& os,  const string& prefix, const Node<T>* node, bool isLeft){
+            if( node != nullptr ){
+                os << prefix;
+                if(isLeft){
+                    os << "├──";
+                }
+                else{
+                    os << "└──" ;
+                }
+                // print the value of the node
+                os << node->value << endl;
+                // enter the next tree level - left and right branch
+                printBT(os, prefix + (isLeft ? "│   " : "    "), node->left, true);
+                printBT(os, prefix + (isLeft ? "│   " : "    "), node->right, false);
+            }
+        }
     };
-
 }

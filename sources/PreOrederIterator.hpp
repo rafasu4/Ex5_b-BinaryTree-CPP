@@ -22,16 +22,10 @@ namespace ariel
         };
 
         /*Returns the current node value.*/
-        T &operator*() const
-        {
-            return current->value;
-        }
+        T &operator*() const{return current->value;}
 
         /*Returns the address of the current node.*/
-        T *operator->() const
-        {
-            return &(current);
-        }
+        T *operator->() const{ return &(current->value);}
 
         /*Points to the next element in in-order travel-set.*/
         PreOrderIterator &operator++()
@@ -70,10 +64,9 @@ namespace ariel
 
         PreOrderIterator operator++(int)
         {
-            const PreOrderIterator
-            tmp = *this;
+            const PreOrderIterator temp = *this;
             ++*this;
-            return tmp;
+            return temp;
         }
 
         bool operator==(const PreOrderIterator &other) const
